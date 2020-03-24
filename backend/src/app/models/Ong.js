@@ -1,4 +1,5 @@
 import Sequelize, { Model } from 'sequelize';
+import crypto from 'crypto';
 
 class Ong extends Model {
     static init(sequelize) {
@@ -11,6 +12,12 @@ class Ong extends Model {
         }, {
             sequelize
         });
+
+        this.addHook('beforeSave', async user => {
+            user.id = await crypto.randomBytes(4).toString('HEX');
+        });
+
+        return this;
     }
 }
 
