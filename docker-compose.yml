@@ -1,0 +1,20 @@
+version: '3'
+services:
+  db:
+    image: postgres
+    volumes:
+      - ./backend/postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: admin
+  node:
+    build: .
+    image: semana-omnistack:11
+    command: yarn dev
+    volumes:
+      -  ./backend/:/app/
+    ports: 
+      - "3000:3000"
+    depends_on:
+      - db
