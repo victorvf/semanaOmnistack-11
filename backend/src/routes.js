@@ -4,7 +4,6 @@ import OngController from './app/controllers/OngController';
 import IncidentController from './app/controllers/IncidentController';
 import SessionController from './app/controllers/SessionController';
 
-
 const routes = new Router();
 
 routes.post('/session', SessionController.store);
