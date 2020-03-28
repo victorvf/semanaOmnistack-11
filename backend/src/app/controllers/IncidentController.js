@@ -1,3 +1,5 @@
+import * as Yup from 'yup';
+
 import Incident from '../models/Incident';
 import Ong from '../models/Ong';
 
@@ -7,16 +9,14 @@ class IncidentController {
 
         const { count, rows: incidents } = await Incident.findAndCountAll({
             limit: 5,
-            offset: ( page - 1 ) * 5,
-            include: [{
-                model: Ong,
-                as: 'ong',
-                attributes: [
-                    'name',
-                    'email',
-                    'whatsapp'
-                ],
-            }]
+            offset: (page - 1) * 5,
+            include: [
+                {
+                    model: Ong,
+                    as: 'ong',
+                    attributes: ['name', 'email', 'whatsapp'],
+                },
+            ],
         });
 
         res.header('X-Total-Count', count);
@@ -25,6 +25,16 @@ class IncidentController {
     }
 
     async show(req, res) {
+        const schema = Yup.object().shape({
+            authorization: Yup.string().required(),
+        });
+
+        if (!(await schema.isValid(req.headers))) {
+            return res.status(400).json({
+                message: 'validation fails',
+            });
+        }
+
         const ong_id = req.headers.authorization;
         const { page = 1 } = req.query;
 
@@ -33,7 +43,7 @@ class IncidentController {
                 ong_id,
             },
             limit: 5,
-            offset: ( page - 1 ) * 5,
+            offset: (page - 1) * 5,
         });
 
         if (!incidents) {
@@ -46,6 +56,25 @@ class IncidentController {
     }
 
     async store(req, res) {
+        const schema = Yup.object().shape({
+            title: Yup.string().required(),
+            description: Yup.string().required(),
+            value: Yup.number().required(),
+        });
+
+        const auth = Yup.object.shape({
+            authorization: Yup.string().required(),
+        });
+
+        if (
+            !(await schema.isValid(req.body)) &&
+            !(await auth.isValid(req.headers))
+        ) {
+            return res.status(400).json({
+                message: 'validation fails',
+            });
+        }
+
         const ong_id = req.headers.authorization;
 
         const data = {
@@ -59,6 +88,16 @@ class IncidentController {
     }
 
     async delete(req, res) {
+        const schema = Yup.object().shape({
+            id: Yup.number().required(),
+        });
+
+        if (!(await schema.isValid(req.params))) {
+            return res.status(400).json({
+                message: 'validation fails',
+            });
+        }
+
         const { id } = req.params;
         const ong_id = req.headers.authorization;
 
@@ -67,7 +106,7 @@ class IncidentController {
         if (ong_id !== incident.ong_id) {
             return res.status(400).json({
                 message: 'you has not permission',
-            })
+            });
         }
 
         if (!incident) {
@@ -79,7 +118,7 @@ class IncidentController {
         await incident.destroy();
 
         return res.json({
-            message: "Incident was deleted",
+            message: 'Incident was deleted',
         });
     }
 }

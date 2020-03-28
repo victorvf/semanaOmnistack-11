@@ -1,3 +1,5 @@
+import * as Yup from 'yup';
+
 import Ong from '../models/Ong';
 
 class OngController {
@@ -8,10 +10,24 @@ class OngController {
     }
 
     async store(req, res) {
+        const schema = Yup.object().shape({
+            name: Yup.string().required(),
+            email: Yup.string().email().required(),
+            whatsapp: Yup.string().required(),
+            city: Yup.string().required(),
+            uf: Yup.string().max(2).required(),
+        });
+
+        if (!(await schema.isValid(req.body))) {
+            return res.status(400).json({
+                message: 'validation fails',
+            });
+        }
+
         const ongExists = await Ong.findOne({
             where: {
                 email: req.body.email,
-            }
+            },
         });
 
         if (ongExists) {
@@ -20,9 +36,9 @@ class OngController {
             });
         }
 
-        const ong = await Ong.create(req.body);
+        const { id } = await Ong.create(req.body);
 
-        return res.json(ong);
+        return res.json({ id });
     }
 }
 
